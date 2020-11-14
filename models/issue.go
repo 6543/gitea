@@ -52,6 +52,8 @@ type Issue struct {
 	NumComments      int
 	Ref              string
 
+	ProjectIssueID ProjectIssue `xorm:"-"`
+
 	DeadlineUnix timeutil.TimeStamp `xorm:"INDEX"`
 
 	CreatedUnix timeutil.TimeStamp `xorm:"INDEX created"`

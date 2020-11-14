@@ -49,7 +49,8 @@ type Project struct {
 	BoardType   ProjectBoardType
 	Type        ProjectType
 
-	RenderedContent string `xorm:"-"`
+	RenderedContent string      `xorm:"-"`
+	Repo            *Repository `xorm:"-"`
 
 	CreatedUnix    timeutil.TimeStamp `xorm:"INDEX created"`
 	UpdatedUnix    timeutil.TimeStamp `xorm:"INDEX updated"`
@@ -307,26 +308,19 @@ func deleteProjectByID(e Engine, id int64) error {
 	return updateRepositoryProjectCount(e, p.RepoID)
 }
 
-// Update given boards priority for a project
-func UpdateBoards(boards []ProjectBoard) error {
-	for _, board := range boards {
-		if _, err := x.ID(board.ID).Cols("priority").Update(&board); err != nil {
-			log.Info("failed updating board priorities %s", err)
-			return err
-		}
-
-	}
-	return nil
+// LoadRepository loads repository of a given project
+func (p *Project) LoadRepository() error {
+	return p.loadRepository(x)
 }
 
-// Update given issue priority and column
-func UpdateBoardIssues(issues []ProjectIssue) error {
-	for _, issue := range issues {
-		if _, err := x.ID(issue.ID).Cols("priority", "project_board_id").Update(&issue); err != nil {
-			log.Info("failed updating cards priorities %s", err)
-			return err
-		}
-
+// loadRepository loads repository of a given project
+func (p *Project) loadRepository(e Engine) error {
+	if p.Repo != nil {
+		return nil
+	}
+	if _, err := e.ID(p.RepoID).Get(p.Repo); err != nil {
+		log.Info("failed getting repo %v", err)
+		return err
 	}
 	return nil
 }

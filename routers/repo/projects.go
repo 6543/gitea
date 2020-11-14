@@ -12,6 +12,7 @@ import (
 	"code.gitea.io/gitea/modules/auth"
 	"code.gitea.io/gitea/modules/base"
 	"code.gitea.io/gitea/modules/context"
+	"code.gitea.io/gitea/modules/log"
 	"code.gitea.io/gitea/modules/markup/markdown"
 	"code.gitea.io/gitea/modules/setting"
 	"code.gitea.io/gitea/modules/util"
@@ -610,7 +611,11 @@ func UpdateBoardsPriorityPost(ctx *context.Context, form auth.UpdateBoardPriorit
 	}
 
 	boards := form
-	models.UpdateBoards(form.Boards)
+	if err := models.UpdateBoardsPriority(form.Boards); err != nil {
+		log.Error("failed updating boards %v", err)
+		ctx.JSON(500, err)
+		return
+	}
 	ctx.JSON(200, boards)
 }
 
@@ -624,8 +629,12 @@ func UpdateBoardIssuePriority(ctx *context.Context, form auth.UpdateIssuePriorit
 		return
 	}
 
-	issues := form
-	models.UpdateBoardIssues(form.Issues)
+	issues, err := models.UpdateBoardIssuesPriority(form.Issues)
+	if err != nil {
+		log.Error("failed updating issues %v", err)
+		ctx.JSON(500, err)
+		return
+	}
 
 	ctx.JSON(200, issues)
 }
